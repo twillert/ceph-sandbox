@@ -1,0 +1,95 @@
+---
+- name: Create a sandbox instance
+  hosts: localhost
+  gather_facts: False
+  vars:
+    keypair:	     thomas_internet_home
+    instance_type:   t2.medium
+    security_group: default
+    #image:	     ami-194cdc76	# RHEL 7.4
+    image:	     ami-dd3c0f36	# CENTOS 7
+    #image:       ami-04cf43aca3e6f3de3 # CENTOS 7 @ 02.03.2019
+    region:	     eu-central-1
+    zone:        eu-central-1b
+    count:           1
+    owner:           thomas
+    role:            node
+  tasks:
+    - ec2_vpc_net:
+        state:        present
+        cidr_block:   172.16.0.0/16
+        dns_hostnames: yes
+        region:       "{{ region }}"
+        name:         thomas_vpc
+        tags:
+          owner:      "{{ owner }}"
+        multi_ok:     false
+      register:       thomas_vpc
+
+    - name: create igw
+      ec2_vpc_igw:
+        vpc_id: "{{ thomas_vpc.vpc.id }}"
+        region: "{{ region }}"
+        state: present
+        tags:
+          owner: "{{ owner }}"
+      register: thomas_igw
+
+    - name: create subnet 172.16.0.0/24
+      ec2_vpc_subnet:
+        state: present
+        az: "{{ zone }}"
+        cidr: 172.16.0.0/24
+        map_public: yes
+        region: "{{ region }}"
+        tags:
+          owner: "{{ owner }}"
+        vpc_id: "{{ thomas_vpc.vpc.id }}"
+      register: thomas_subnet
+
+    - name: Set up public subnet route table
+      ec2_vpc_route_table:
+        vpc_id: "{{ thomas_vpc.vpc.id }}"
+        region: "{{ region }}"
+        tags:
+          Owner: "{{ owner }}"
+        subnets:
+          - "{{ thomas_subnet.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ thomas_igw.gateway_id }}"
+      register: thomas_route_table
+
+    - name: Launch instance
+      ec2:
+         key_name: "{{ keypair }}"
+         group: "{{ security_group }}"
+         instance_type: "{{ instance_type }}"
+         image: "{{ image }}"
+         wait: true
+         region: "{{ region }}"
+         vpc_subnet_id: "{{ thomas_subnet.subnet.id }}"
+         assign_public_ip: yes
+         instance_tags:
+           owner: "{{ owner }}"
+           role:  "{{ role }}"
+         count: "{{ count }}"
+         zone: "{{ zone }}"
+      register: ec2
+
+    - name: Add new instance to host group
+      add_host:
+        hostname: "{{ item.public_ip }}"
+        groupname: launched
+      with_items: "{{ ec2.instances }}"
+
+    - name: Wait for SSH to come up
+      wait_for:
+        host: "{{ item.public_ip }}"
+        port: 22
+        delay: 60
+        timeout: 320
+        state: started
+      with_items: "{{ ec2.instances }}"
+
+
