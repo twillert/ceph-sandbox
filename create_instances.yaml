@@ -7,8 +7,9 @@
     instance_type:   t2.medium
     security_group:  thomas_sg
     #image:	     ami-194cdc76	# RHEL 7.4
-    image:	     ami-dd3c0f36	# CENTOS 7
+    #image:	     ami-dd3c0f36	# CENTOS 7
     #image:       ami-04cf43aca3e6f3de3 # CENTOS 7 @ 02.03.2019
+    image:       ami-0ac05733838eabc06 # Ubuntu Server 18.04 LTS (HVM), SSD Volume Type - ami-0ac05733838eabc06 (64-bit x86) /
     region:	     eu-central-1
     zone:        eu-central-1b
     count:           1
