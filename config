@@ -1,0 +1,9 @@
+Host *
+  ServerAliveInterval 240
+  IdentityFile ~/.ssh/thomas_internet_home
+  User centos
+
+Host github.com
+  IdentityFile ~/.ssh/thomas_laptop_ubuntu
+  ServerAliveInterval 240
+  StrictHostKeyChecking no
