@@ -14,7 +14,7 @@
     count:           1
     owner:           thomas
     role:            node
-    disk_size:       8
+    disk_size:       20
   tasks:
     - ec2_vpc_net:
         state:        present
@@ -78,6 +78,10 @@
          zone: "{{ zone }}"
          volumes:
            - device_name: /dev/xvda
+             volume_type: gp2
+             volume_size: 8
+             delete_on_termination: true
+           - device_name: /dev/xvdb
              volume_type: gp2
              volume_size: "{{ disk_size }}"
              delete_on_termination: true

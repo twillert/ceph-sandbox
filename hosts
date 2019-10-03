@@ -1,5 +1,6 @@
-#!/bin/bash
+#!/bin/bash -xe
 
-ansible-playbook create_instances.yaml -e count=3 -e role=mon -e disk_size=8
-ansible-playbook create_instances.yaml -e count=5 -e role=osd -e disk_size=50
+ansible-playbook create_instances.yaml -e count=1 -e role=mon -e disk_size=8
+ansible-playbook create_instances.yaml -e count=3 -e role=osd -e disk_size=50
+ansible-playbook create_instances.yaml -e count=1 -e role=grafana -e disk_size=8
 
